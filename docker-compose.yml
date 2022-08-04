@@ -1,72 +1,71 @@
-version: '3.6'
 services:
-  nginx:
-    image: nginx:latest
-    container_name: ${APP_NAME}-nginx
+  ng:
+    image: "nginx:1.23.1"
     ports:
-      - '80:80'
-      - '443:443'
+      - "${DOCKER_HOST_NGINX_HTTP_PORT:-63980}:80"
+      - "${DOCKER_HOST_NGINX_TLS_PORT:-63981}:443"
     volumes:
       - "./nginx/:/etc/nginx/templates/"
-      - ./src:/var/www/html:rw,cached
-      - ./certs:/etc/certs
+      - "./src:/var/www/html:rw,cached"
+      - "./certs:/etc/certs"
     environment:
       - "NGINX_ENVSUBST_TEMPLATE_SUFFIX=.conf"
       - "DOMAIN=${DOMAIN}"
     depends_on:
-      - wordpress
-    restart: always
+      - "app"
+    # restart: always
+    env_file: "${DOCKER_ENV_FILE:-.env}"
 
   mysql:
-    image: mariadb
-    container_name: ${APP_NAME}-mysql
-    command: --lower_case_table_names=2
+    image: "mariadb:10.8.3-jammy"
+    command: "--lower_case_table_names=2"
     volumes:
-       - './data/db:/var/lib/mysql:delegated'
+      - "./docker/data:/var/lib/mysql:delegated"
     environment:
-      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${DB_NAME}
-    restart: always
+      - "MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}"
+      - "MYSQL_DATABASE=${DB_NAME}"
+    # restart: always
     ports:
-      - '3306:3306'
+      - "${DOCKER_HOST_DB_PORT:-63982}:3306"
+    env_file: "${DOCKER_ENV_FILE:-.env}"
 
-  wordpress:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ${APP_NAME}-wordpress
     volumes:
-      - ./src:/var/www/html:rw,cached
-      - ./config/php.ini:/usr/local/etc/php/conf.d/php.ini
+      - "./src:/var/www/html:rw,cached"
+      - "./config/php.ini:/usr/local/etc/php/conf.d/php.ini"
     depends_on:
       - mysql
-    restart: always
+    # restart: always
+    env_file: "${DOCKER_ENV_FILE:-.env}"
+    user: "${UUID:-1000}:${GID:-1000}"
 
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: ${APP_NAME}-phpmyadmin
+  p-admin:
+    image: "phpmyadmin:5.2.0-apache"
     volumes:
-      - ./config/phpmyadmin.ini:/usr/local/etc/php/conf.d/phpmyadmin.ini
+      - "./config/phpmyadmin.ini:/usr/local/etc/php/conf.d/phpmyadmin.ini"
     environment:
       PMA_HOST: "${DB_HOST}"
       PMA_PORT: 3306
       MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
     ports:
-      - '8082:80'
-    links:
-      - mysql:mysql
+      - "${DOCKER_HOST_PHP_ADMIN_PORT:-63983}:80"
+    env_file: "${DOCKER_ENV_FILE:-.env}"
 
-  mailhog:
-    container_name: ${APP_NAME}-mailhog
-    image: mailhog/mailhog
+  mail:
+    image: "mailhog/mailhog:v1.0.1"
     ports:
-      - "8025:8025"
+      - "${DOCKER_HOST_MAIL_PORT:-63984}:8025"
       - "1025:1025"
+    env_file: "${DOCKER_ENV_FILE:-.env}"
 
-  composer:
-    image: composer
-    container_name: ${APP_NAME}-composer
-    working_dir: /var/www/html
-    restart: 'no'
+  c:
+    image: "composer:2.3.10"
+    working_dir: "/var/www/html"
+    restart: "no"
+    user: "${UUID:-1000}:${GID:-1000}"
     volumes:
-      - ./src:/var/www/html:rw,cached
+      - "./src:/var/www/html:rw,cached"
+    env_file: "${DOCKER_ENV_FILE:-.env}"
