@@ -92,7 +92,15 @@ function cert {
   find "./$path" -type f -name "*.pem" -exec mv {} certs \;
   rm -rf "./$path"
 
-  printf "127.0.0.1 %s\n" "$DOMAIN" | sudo tee -a /etc/hosts
+  local host_entry="127.0.0.1 $DOMAIN"
+
+  if [[ ! "$(cat /etc/hosts)" =~ $host_entry ]]; then
+    printf "%s\n" "$host_entry" | sudo tee -a /etc/hosts
+  fi
+
+  mkdir -p ./_certs
+
+  cat "$(mkcert -CAROOT)/rootCA.pem" >./_certs/mkcert-ca-root.pem
 }
 
 function dev {
@@ -100,7 +108,9 @@ function dev {
 
   _raise_on_no_env_file "$@"
 
-  if ! compgen -G "/tmp/someFiles*" >/dev/null; then
+  clear
+
+  if ! compgen -G "./certs/*.pem" >/dev/null; then
     # shellcheck disable=2145
     _wait_until "cert $@"
   fi
@@ -115,11 +125,37 @@ function dev {
 
   local services="mysql app ng p-admin mail"
 
-  clear
-
   # shellcheck disable=2086
   docker compose up -d $services &&
     docker compose logs -f $services
+}
+
+function clean {
+  docker compose kill
+  docker compose down -v
+
+  rm -rf \
+    src/vendor/ \
+    src/web/wp \
+    src/composer.lock \
+    src/web/app/upgrade
+
+  for frag in "plugins" "themes" "uploads"; do
+
+    local path="./src/web/app/$frag"
+
+    if [[ -e "$path" ]]; then
+      # shellcheck disable=2045
+      for content in $(ls "$path"); do
+        # shellcheck disable=2115
+        rm -rf "$path/$content"
+      done
+    fi
+
+  done
+
+  sudo chown -R "$USER:$USER" docker/
+  rm -rf ./docker/
 }
 
 function help {

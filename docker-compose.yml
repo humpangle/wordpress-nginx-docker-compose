@@ -15,6 +15,10 @@ services:
       - "app"
     # restart: always
     env_file: "${DOCKER_ENV_FILE:-.env}"
+    networks:
+      project-name:
+        aliases:
+          - "${DOMAIN}"
 
   mysql:
     image: "mariadb:10.8.3-jammy"
@@ -28,6 +32,8 @@ services:
     ports:
       - "${DOCKER_HOST_DB_PORT:-63982}:3306"
     env_file: "${DOCKER_ENV_FILE:-.env}"
+    networks:
+      project-name:
 
   app:
     build:
@@ -36,11 +42,21 @@ services:
     volumes:
       - "./src:/var/www/html:rw,cached"
       - "./config/php.ini:/usr/local/etc/php/conf.d/php.ini"
+      - "./certs/we.local.pem:/usr/local/share/ca-certificates/we.local.crt"
+
+      # Note that we are writing only the mkcert CA root as the openssl trusted
+      # certificates. This works for now. In case openssl needs certificates
+      # from other authorities, we should download from
+      # https://curl.haxx.se/ca/cacert.pem and then append mkcert CA cert to
+      # the cacert.pem file and place in /usr/lib/ssl/cert.pem
+      - "./_certs/mkcert-ca-root.pem:/usr/lib/ssl/cert.pem"
     depends_on:
       - mysql
     # restart: always
     env_file: "${DOCKER_ENV_FILE:-.env}"
     user: "${UUID:-1000}:${GID:-1000}"
+    networks:
+      project-name:
 
   p-admin:
     image: "phpmyadmin:5.2.0-apache"
@@ -53,6 +69,8 @@ services:
     ports:
       - "${DOCKER_HOST_PHP_ADMIN_PORT:-63983}:80"
     env_file: "${DOCKER_ENV_FILE:-.env}"
+    networks:
+      project-name:
 
   mail:
     image: "mailhog/mailhog:v1.0.1"
@@ -69,3 +87,9 @@ services:
     volumes:
       - "./src:/var/www/html:rw,cached"
     env_file: "${DOCKER_ENV_FILE:-.env}"
+    networks:
+      project-name:
+
+networks:
+  project-name:
+    name: "project-name-php"
