@@ -6,6 +6,7 @@ src/web/app/mu-plugins/*/
 src/web/app/upgrade
 src/web/app/uploads/*
 !src/web/app/uploads/.gitkeep
+src/composer.lock
 
 # WordPress
 src/web/wp
