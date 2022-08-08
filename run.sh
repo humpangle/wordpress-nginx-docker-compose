@@ -52,11 +52,16 @@ function _timestamp {
 
 function _raise_on_no_env_file {
   if [[ -n "$DOCKER_ENV_FILE" ]]; then
+    if [[ "$DOCKER_ENV_FILE" =~ .env.example ]]; then
+      printf "\nERROR: env filename can not be .env.example.\n\n"
+      exit 1
+    fi
+
     return 0
   fi
 
   if [[ -z "$1" ]] || [[ ! -e "$1" ]]; then
-    printf "\nenv filename has not been provided or invalid.\n"
+    printf "\nERROR: env filename has not been provided or invalid.\n"
     printf "You may also source your environment file.\n\n"
     exit 1
   fi

@@ -39,6 +39,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: "${DOCKER_IMAGE_NAME:-project-name-app:0.0.0}"
     volumes:
       - "./src:/var/www/html:rw,cached"
       - "./config/php.ini:/usr/local/etc/php/conf.d/php.ini"
