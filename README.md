@@ -11,7 +11,7 @@ Use WordPress locally with Docker using [Docker compose](https://docs.docker.com
 
 + A `Dockerfile` for extending a base image and using a custom [Docker image](https://github.com/urre/wordpress-nginx-docker-compose-image) with an [automated build on Docker Hub](https://cloud.docker.com/repository/docker/urre/wordpress-nginx-docker-compose-image)
 + PHP 8.0
-+ Custom domain and HTTPS support. So you can use for example [https://wp1.local](https://wp1.local)
++ Custom domain and HTTPS support. So you can use for example [https://project-name.local](https://project-name.local)
 + Custom nginx config in `./nginx`
 + Custom PHP `php.ini` config in `./config`
 + Volumes for `nginx`, `wordpress` and `mariadb`
@@ -55,10 +55,10 @@ Example:
 
 ```dotenv
 IP=127.0.0.1
-APP_NAME=wp1
-DOMAIN="wp1.local"
+APP_NAME=project-name
+DOMAIN="project-name.local"
 DB_HOST=mysql
-DB_NAME=wp1
+DB_NAME=project-name
 DB_ROOT_PASSWORD=password
 DB_TABLE_PREFIX=wp_
 ```
@@ -70,7 +70,7 @@ Edit `./src/.env.example` to your needs. During the `composer create-project` co
 Example:
 
 ```dotenv
-DB_NAME='wp1'
+DB_NAME='project-name'
 DB_USER='root'
 DB_PASSWORD='password'
 
@@ -83,7 +83,7 @@ DB_HOST='mysql'
 # DB_PREFIX='wp_'
 
 WP_ENV='development'
-WP_HOME='https://wp1.local'
+WP_HOME='https://project-name.local'
 WP_SITEURL="${WP_HOME}/wp"
 WP_DEBUG_LOG=/path/to/debug.log
 
@@ -123,7 +123,7 @@ sudo nano /etc/hosts
 Add your selected domain like this:
 
 ```
-127.0.0.1 wp1.local
+127.0.0.1 project-name.local
 ```
 
 2. Continue on the Install step below
@@ -198,15 +198,15 @@ docker-compose up
 Docker Compose will now start all the services for you:
 
 ```shell
-Starting wp1-mysql    ... done
-Starting wp1-composer ... done
-Starting wp1-phpmyadmin ... done
-Starting wp1-wordpress  ... done
-Starting wp1-nginx      ... done
-Starting wp1-mailhog    ... done
+Starting project-name-mysql    ... done
+Starting project-name-composer ... done
+Starting project-name-phpmyadmin ... done
+Starting project-name-wordpress  ... done
+Starting project-name-nginx      ... done
+Starting project-name-mailhog    ... done
 ```
 
-🚀 Open [https://wp1.local](https://wp1.local) in your browser
+🚀 Open [https://project-name.local](https://project-name.local) in your browser
 
 ## PhpMyAdmin
 
@@ -234,7 +234,7 @@ docker-compose run composer update
 #### Use WP-CLI
 
 ```shell
-docker exec -it wp1-wordpress bash
+docker exec -it project-name-wordpress bash
 ```
 
 Login to the container
@@ -267,7 +267,7 @@ docker-compose up -d --force-recreate --build
 Login to the docker container
 
 ```shell
-docker exec -it wp1-wordpress bash
+docker exec -it project-name-wordpress bash
 ```
 
 Stop

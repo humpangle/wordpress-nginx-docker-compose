@@ -7,6 +7,8 @@ src/web/app/upgrade
 src/web/app/uploads/*
 !src/web/app/uploads/.gitkeep
 src/composer.lock
+__debug/*
+!__debug/.gitkeep
 
 # WordPress
 src/web/wp
