@@ -139,6 +139,10 @@ function clean {
   docker compose kill
   docker compose down -v
 
+  sudo chown -R "$USER:$USER" .
+
+  rm -rf ./*certs
+
   rm -rf \
     src/vendor/ \
     src/web/wp \
@@ -159,8 +163,39 @@ function clean {
 
   done
 
-  sudo chown -R "$USER:$USER" docker/
   rm -rf ./docker/
+}
+
+function cp {
+  : "Copy from our app codes to appropriate wordpress folders"
+
+  local our_components_root="./src/app"
+
+  if [[ ! -e "${our_components_root}" ]]; then
+    printf '\nERROR: You have not created any custom wordpress component. Exiting!\n\n'
+    exit 1
+  fi
+
+  clear
+
+  local word_press_components_root="/var/www/html/web/app"
+
+  # shellcheck disable=2045
+  for component in $(ls "${our_components_root}"); do
+    local word_press_component_path="${word_press_components_root}/$component"
+    local app_component_root="${our_components_root}/${component}"
+
+    # shellcheck disable=2045
+    for app_path in $(ls "$app_component_root"); do
+      local app_component_full_path="${app_component_root}/${app_path}"
+
+      local cmd="docker cp ${app_component_full_path} th-app:${word_press_component_path}"
+
+      printf 'Executing:\n\t %s\n\n' "${cmd}"
+      eval "${cmd}"
+    done
+  done
+
 }
 
 function help {
