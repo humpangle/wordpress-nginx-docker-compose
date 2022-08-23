@@ -7,7 +7,7 @@ services:
     volumes:
       - "./nginx/:/etc/nginx/templates/"
       - "./src:/var/www/html:rw,cached"
-      - "./certs:/etc/certs"
+      - "${SITE_CERT_FOLDER:-./certs}:/etc/certs:ro"
     environment:
       - "NGINX_ENVSUBST_TEMPLATE_SUFFIX=.conf"
       - "DOMAIN=${DOMAIN}"
@@ -50,8 +50,10 @@ services:
       # from other authorities, we should download from
       # https://curl.haxx.se/ca/cacert.pem and then append mkcert CA cert to
       # the cacert.pem file and place in /usr/lib/ssl/cert.pem
-      - "./_certs/mkcert-ca-root.pem:/usr/lib/ssl/cert.pem"
-      - "./certs/${DOMAIN}.pem:/usr/local/share/ca-certificates/${DOMAIN}.crt"
+      - "${CA_ROOT:-./_certs/mkcert-ca-root.pem}:/usr/lib/ssl/cert.pem:ro"
+      # - "./certs/${DOMAIN}.pem:/usr/local/share/ca-certificates/${DOMAIN}.crt"
+    ports:
+      - "${DOCKER_HOST_APP_PORT:-63985}:9000"
     depends_on:
       - mysql
     # restart: always

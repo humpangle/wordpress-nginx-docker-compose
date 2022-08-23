@@ -3,7 +3,7 @@
 
 set -e
 
-components_roots='src/components'
+components_roots='./src/components'
 word_press_components_root='/var/www/html/web/app'
 copy_watch_cmd='bash run.sh app.cp'
 
@@ -79,6 +79,10 @@ function _has_internet {
   printf 1
 }
 
+function _cert_folder {
+  printf '%s' "${SITE_CERT_FOLDER:-./certs}"
+}
+
 function cert {
   : "Generate certificate for use with HTTPS"
 
@@ -89,8 +93,11 @@ function cert {
   local path
   path="$(_timestamp)"
 
+  local cert_folder
+  cert_folder="$(_cert_folder)"
+
   mkdir -p "$path"
-  rm -rf certs && mkdir -p certs
+  rm -rf "${cert_folder}" && mkdir -p "${cert_folder}"
 
   cd "$path"
 
@@ -98,7 +105,7 @@ function cert {
 
   cd -
 
-  find "./$path" -type f -name "*.pem" -exec mv {} certs \;
+  find "./$path" -type f -name "*.pem" -exec mv {} "${cert_folder}" \;
   rm -rf "./$path"
 
   local host_entry="127.0.0.1 $DOMAIN"
@@ -119,7 +126,7 @@ function dev {
 
   clear
 
-  if ! compgen -G "./certs/*.pem" >/dev/null; then
+  if ! compgen -G "${cert_folder}/*.pem" >/dev/null; then
     # shellcheck disable=2145
     _wait_until "cert $@"
   fi
@@ -145,7 +152,7 @@ function clean {
 
   sudo chown -R "$USER:$USER" .
 
-  rm -rf ./*certs
+  rm -rf ./*certs "$(_cert_folder)"
 
   rm -rf \
     src/vendor/ \
